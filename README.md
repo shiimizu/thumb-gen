@@ -161,3 +161,7 @@ https://stackoverflow.com/a/16130031
 ```
 cmake .. -DZLIB_LIBRARY=deps\zlib.lib -DPNG_LIBRARY=deps\libpng.lib -DJPEG_LIBRARY=deps\jpeg.dll -DFREETYPE_LIBRARY=deps\freetype.lib -DPTHREAD_DIR=deps\pthreads-w32-2-9-1-release\Pre-built.2
 ```
+```
+PHP libjpeg (What libjpeg version PHP uses)
+https://wiki.php.net/internals/windows/libs/libjpeg
+```
