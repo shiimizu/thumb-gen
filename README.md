@@ -20,7 +20,7 @@ __*Not working:*__
 * any php version > php-5.4.45 (because it uses a higher `libgd`)
 * python gdmodule
 * python PIL
-* python pillow (_have to retest with new findings_)
+* python pillow
 
 **New findings:**
 When [building PHP for Windows](https://wiki.php.net/internals/windows/stepbystepbuild), in the [php-sdk](https://windows.php.net/downloads/php-sdk/) archives, you'll find that VC9 uses `libjpeg 8d`
