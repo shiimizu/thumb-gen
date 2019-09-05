@@ -121,7 +121,7 @@ sudo make install # Output libgd to gd-build dir
 
 __*To use & specify the jpeg build from before:*__
 ```bash
-./configure --with-png=no --with-xpm=no --with-jpeg=$(pwd)/libjpeg-libjpeg-8d/jpeg-build
+./configure --with-png=no --with-xpm=no --with-jpeg=$(pwd)/../libjpeg-libjpeg-8d/jpeg-build
 make -j4
 sudo make install # Install libgd to system
 ```
