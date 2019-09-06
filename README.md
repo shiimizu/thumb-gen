@@ -46,7 +46,7 @@ When [building PHP for Windows](https://wiki.php.net/internals/windows/stepbyste
 ### C
 ```
 gcc -o testgd testgd.c -lgd -lpng -lz -ljpeg -lfreetype -lm -static
-./testgd 00aa5b6f0cad3600bbfc1251e51462be.jpg thumb.jpg 125 83
+./testgd 00aa5b6f0cad3600bbfc1251e51462be.jpg thumb.jpg
 ```
 
 ### PHP
