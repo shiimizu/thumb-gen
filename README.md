@@ -18,19 +18,22 @@ Notes: Seems to only work with VC9 ✔️
 
 __*Not working:*__
 * any php version > php-5.4.45 (because it uses a higher `libgd`)
+* any `libgd` version > `2.0.35` (although the signature and all the color parameters are the same, slight additions to the metadata seems to change the hashsum)
+* any `libjpeg` version > `8d` (different algorithms for newer versions)
+* `libjpeg-turbo` (different algorithm)
 * python gdmodule
 * python PIL
 * python pillow
 
 **New findings:**
-When [building PHP for Windows](https://wiki.php.net/internals/windows/stepbystepbuild), in the [php-sdk](https://windows.php.net/downloads/php-sdk/) archives, you'll find that VC9 uses `libjpeg 8d`
+When [building PHP for Windows](https://wiki.php.net/internals/windows/stepbystepbuild), in the [php-sdk archives](https://windows.php.net/downloads/php-sdk/deps/archives), you'll find that VC9 uses `libjpeg 8d`
 
 # ✔️ *Newer findings:*
 
 ## Requirements:
 
-* `libgd 2.0.34` or `libgd 2.0.35`
-* A [`patched libjpeg 8d`](https://github.com/winlibs/libjpeg/releases/tag/libjpeg-8d)
+* `libgd-2.0.34` or `libgd-2.0.35`
+* A [patched `libjpeg-8d`](https://github.com/winlibs/libjpeg/releases/tag/libjpeg-8d)<sup>[[1](https://wiki.php.net/internals/windows/libs/libjpeg)]</sup>
 
 ## What are these?
 `libjpeg` is a jpeg library.
@@ -80,7 +83,7 @@ MD5: 4QIMUT+mn01qiR4cRLQANQ==
 
 (Iɴsᴛʀᴜᴄᴛɪᴏɴs ᴄᴜʀʀᴇɴᴛʟʏ ᴏɴʟʏ ғᴏʀ **Lɪɴᴜx**)
 
-### Build libjpeg `8d`
+### Build `libjpeg-8d`
 
 
 __*Standard building:*__
@@ -100,7 +103,7 @@ make -j4
 sudo make install # Output libjpeg to jpeg-build dir
 ```
 
-### Build libgd `2.0.34` or `2.0.35`
+### Build `libgd` `2.0.34` or `2.0.35`
 
 __*Standard building:*__
 ```bash
