@@ -1,5 +1,9 @@
 # Thumbnail generation
-<sub>(With same hashes)</sub>
+
+Note:
+
+Currently, the only supported filetypes are JPEG images.<br>
+GIF, PNG, and WEBM are producing different hashsums.
 
 ## Tested:
 * `php-5.3.20-Win32-VC9-x86` `libgd 2.0.34`
@@ -45,13 +49,13 @@ When [building PHP for Windows](https://wiki.php.net/internals/windows/stepbyste
 # Usage
 ### C
 ```
-gcc -o testgd testgd.c -lgd -lpng -lz -ljpeg -lfreetype -lm -static
-./testgd 00aa5b6f0cad3600bbfc1251e51462be.jpg thumb.jpg
+gcc -o thumbgen thumbgen.c -lgd -lpng -lz -ljpeg -lfreetype -lm -static
+./thumbgen orig.jpg thumb.jpg
 ```
 
 ### PHP
 ```
-php test.php
+php thumbgen.php
 ```
 
 ### Checking
