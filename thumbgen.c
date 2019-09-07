@@ -75,17 +75,16 @@ int main (int argc, char *argv[]) {
   oh = gdImageSY(in);
 if (argc == 3) {
   // Calculate aspect ratio
-  float aspectRatio = ((float)ow / (float)oh);
   if(ow == oh) {
   	nw = 125;
   	nh = 125;
   } else if (ow > oh) {
   	nw = 125;
-  	nh = nw / aspectRatio;
+  	nh = nw / ((float)ow / (float)oh);
 
   } else if (oh > ow) {
   	nh = 125;
-  	nw = nh / aspectRatio;
+  	nw = nh / ((float)oh / (float)ow);
   } else {
     fprintf(stderr, "Error determining image size\n");
     return 5;
