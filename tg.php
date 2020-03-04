@@ -6,7 +6,7 @@ define("MAXR_W", '125');
 define("MAXR_H", '125');
 define("ENABLE_PDF", 0);
 
-thumb("./", "alpha", ".png", false);
+thumb("./", "dance", ".gif", false);
 
 // resto -> For replies: this is the ID of the thread being replied to. For OP: this value is zero
 function thumb($path, $tim, $ext, $resto)
@@ -100,43 +100,38 @@ function thumb($path, $tim, $ext, $resto)
         $im_out = ImageCreate($out_w, $out_h);
     }
 
-
+    // Transparency
     switch ($size[2]) {
         case 1:
-            imagesavealpha( $im_out, false );
-            $color = imagecolorallocate($im_out,  239, 241, 253);
-                    //imagecolorallocatealpha
-            imagefill($im_out, 0, 0, $color);
-            // echo "gif\n";
-            break;
-        case 2:
-            // echo "jpg\n";
-            break;
         case 3:
-            // imagealphablending( $im_out, true );
-            imagesavealpha( $im_out, false );
-            $color = imagecolorallocate($im_out,  239, 241, 253);
-                    //imagecolorallocatealpha
+            // echo "gif or png\n";
+            // $color = imagecolorallocate($im_out,  255, 255, 238);            // orange board op      // FFFFEE
+            $color = imagecolorallocate($im_out,  240, 224, 214);               // orange board reply   // F0E0D6
+            // $color = imagecolorallocatealpha($im_out,  238, 242, 255, 0);    // blue board OP        // EEF2FF
+            // $color = imagecolorallocate($im_out,  214, 218, 240);            // blue board reply     // D6DAF0
             imagefill($im_out, 0, 0, $color);
-            // echo "png\n";
             break;
         default:
+        case 2:
+            // echo "jpg\n";
             break;
     }
 
 
     // copy resized original
     ImageCopyResampled($im_out, $im_in, 0, 0, 0, 0, $out_w, $out_h, $size[0], $size[1]);
+
     // thumbnail saved
-    
     ImageJPEG($im_out, $outpath, $jpg_quality);
     chmod($thumb_dir.$tim.'s.jpg',0666);
+
     // created image is destroyed
     ImageDestroy($im_in);
     ImageDestroy($im_out);
     if (isset($pdfjpeg)) {
         unlink($pdfjpeg);
     } // if PDF was thumbnailed delete the orig jpeg
+    
     if ($memory_limit_increased)
         ini_restore('memory_limit');
     

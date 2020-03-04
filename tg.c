@@ -1,7 +1,7 @@
+#include <gd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include "gd.h"
 
 int main(int argc, char* argv[])
 {
@@ -9,6 +9,7 @@ int main(int argc, char* argv[])
     gdImagePtr in, out, image_p;
     int ow, oh, nw, nh, width, height, file_type, jpg_quality;
     int reply = 1;
+    int sfw = 1;
 
     const int MAX_W = 250;
     const int MAX_H = 250;
@@ -16,24 +17,27 @@ int main(int argc, char* argv[])
     const int MAXR_H = 125;
 
     /* Help */
-    if (!(argc == 3 || argc == 4)) {
+    if (!(argc == 3 || argc == 4 || argc == 5)) {
         printf("Generate thumbnails from 4chan\n");
-        printf("%s  <input-file>  <output-file>  [reply?1:0]\n", argv[0]);
+        printf("%s  <input-file>  <output-file>  [reply?1:0]  [sfw-board?1:0]\n", argv[0]);
         return 1;
     }
 
     /* Reply Check */
     if (argc > 3) {
         reply = atoi(argv[3]);
+        if (argc > 4) {
+            sfw = atoi(argv[4]);
+        }
     }
     if (reply <= 0) {
-        width = MAX_W; //output width
-        height = MAX_H; //output height
+        width = MAX_W; // Max output width
+        height = MAX_H; //Max output height
         jpg_quality = 50;
     }
     else {
-        width = MAXR_W; //output width (imgreply)
-        height = MAXR_H; //output height (imgreply)
+        width = MAXR_W; // Max output width (imgreply)
+        height = MAXR_H; // Max output height (imgreply)
         jpg_quality = 40;
     }
 
@@ -55,7 +59,7 @@ int main(int argc, char* argv[])
     // https://en.wikipedia.org/wiki/Magic_number_%28programming%29
     if (i1 == 0x89 && i2 == 0x50) {
         // PNG: 89 50 4E 47 0D 0A 1A 0A
-        // starts with 0x89 0x50
+        // Starts with 0x89 0x50
         // printf("PNG\n");
         in = gdImageCreateFromPng(fp);
         file_type = 3;
@@ -106,32 +110,43 @@ int main(int argc, char* argv[])
         nh = nh;
     }
 
-    /*gdImageSetInterpolationMethod(in, GD_BILINEAR_FIXED);
-      out = gdImageScale(in, w, h);
-      if (!out) {
-        fprintf(stderr, "gdImageScale err\n");
-        return 5;
-      }*/
-
     image_p = gdImageCreateTrueColor(nw, nh);
 
-    // gdImageCopyResized(image_p, in, 0, 0, 0, 0, nw, nh, ow, oh);
-    gdImageCopyResampled(image_p, in, 0, 0, 0, 0, nw, nh, ow, oh);
-    /*printf("in truecolor?: %d\n", gdImageTrueColor(in));
-      printf("image_p truecolor?: %d\n", gdImageTrueColor(image_p));
-      printf("in colors: %d\n", gdImageColorsTotal(in));
-      printf("image_p colors: %d\n", gdImageColorsTotal(image_p));
-      */
-    // imagecopyresampled($image_p, $image, 0, 0, 0, 0, $new_width, $new_height, $width, $height);
+    /* Transparency */
+    if (file_type == 3 || file_type == 1) { /* PNG or GIF */
+        if (reply <= 0) {  /* OP */
+            if (sfw >= 1) {
+                gdImageFill(image_p, 0, 0, 0xEEF2FF); // Blue board OP
+            } else {
+                gdImageFill(image_p, 0, 0, 0xFFFFEE); // Orange board OP
+            }
+        } else { /* Reply */
+            if (sfw >= 1) {
+                gdImageFill(image_p, 0, 0, 0xD6DAF0); // Blue board reply
+            } else {
+                gdImageFill(image_p, 0, 0, 0xF0E0D6); // Orange board Reply
+            }
+        }
+    }
 
-    // Debug aspect ratio
+    gdImageCopyResampled(image_p, in, 0, 0, 0, 0, nw, nh, ow, oh);
+
+    /* Debug aspect ratio */
     /*printf("%d x %d\n",ow,oh);
       printf("%d x %d\n",nw,nh);
       printf("%d x %d\n",gdImageSX(image_p),gdImageSY(image_p));*/
 
-    /* Output */
     fclose(fpp);
     fclose(fp);
+    if (nw <= 0 || nh <= 0 ) {
+        fprintf(stderr, "Input:\t%d x %d\n",ow,oh);
+        fprintf(stderr, "Output:\t%d x %d\n",nw,nh);
+        fprintf(stderr, "An error has occurred  .\n");
+        return 1;
+    }
+
+
+    /* Output */
     fp = fopen(argv[2], "wb");
     if (!fp) {
         fprintf(stderr, "Error saving image %s\n", argv[2]);
