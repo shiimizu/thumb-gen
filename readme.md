@@ -20,7 +20,6 @@ Since the start of 2017 and beyond, OP thumbnails use `50` and reply thumbnails 
 ## Application
 
 To generate checksum-compliant thumbnails you can either use PHP v5.4.15 or later — or manually build `libjpeg-8d` and `libgd` from source — or [download](https://github.com/shiimizu/thumb-gen/releases/latest) the pre-built binaries.  
-Images with alpha transparency currently get different results.
 
 ### PHP
 When dealing with transparent images, modify the script to reflect the right type of board where necessary.   
