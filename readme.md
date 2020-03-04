@@ -24,7 +24,7 @@ Images with alpha transparency currently get different results.
 
 ### PHP
 When dealing with transparent images, modify the script to reflect the right type of board where necessary.   
-```bash
+```console
 $ php tg.php
 $ b3sum op-thumb-orig.jpg thumb/ops.jpg
 e039f64581ee448e8230146272621b4cc9891d1901f42359b66a76c0ee17916b  op-thumb-orig.jpg
@@ -48,7 +48,7 @@ $ b3sum dance-thumb-orig.jpg thumb/dances.jpg
 
 ### C  
 On rare occasions, animated gifs currently produce different results.  
-```bash
+```console
 $ ./tg
 $ Generate thumbnails from 4chan
 ./tg  <input-file>  <output-file>  [reply?1:0]  [sfw-board?1:0]
