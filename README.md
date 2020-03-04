@@ -49,6 +49,10 @@ $ b3sum dance-thumb-orig.jpg thumb/dances.jpg
 ### C  
 On rare occasions, animated gifs currently produce different results.  
 ```bash
+$ ./tg
+$ Generate thumbnails from 4chan
+./tg  <input-file>  <output-file>  [reply?1:0]  [sfw-board?1:0]
+
 $ ./tg op.jpg op-new.jpg 0
 $ b3sum op-thumb-orig.jpg op-new.jpg
 e039f64581ee448e8230146272621b4cc9891d1901f42359b66a76c0ee17916b  op-thumb-orig.jpg
