@@ -1,174 +1,123 @@
 # Thumbnail generation
 
-Note:
+4chan uses PHP to generate their thumbnails (and run their site).  
+PHP uses their own `libgd` (image processing library) which also uses their own modified version of `libjpeg-8d`.  
 
-Currently, the only supported filetypes are JPEG images.<br>
-GIF, PNG, and WEBM are producing different hashsums.
+## Media Characteristics
+Before 2017, thumbnails used the same jpeg quality: `60`.  
+Since the start of 2017 and beyond, OP thumbnails use `50` and reply thumbnails use `40` as their jpeg image quality scale.  
 
-## Tested:
-* `php-5.3.20-Win32-VC9-x86` `libgd 2.0.34`
+**OP Thumbnails**
+* Max width: `250`
+* Max height: `250`
+* JPG quality: `50`
 
-* `php-5.3.22-Win32-VC9-x86` `libgd 2.0.34`
+**Reply Thumbnails**
+* Max width: `125`
+* Max height: `125`
+* JPG quality: `40`
 
-* `php-5.3.29-nts-Win32-VC9-x86` `libgd 2.1.0`
+## Application
 
-* `php-5.4.11-nts-Win32-VC9-x86` `libgd 2.0.34`
-
-* `php-5.4.36-nts-Win32-VC9-x86` `libgd 2.1.0`
-
-* `php-5.4.45-nts-Win32-VC9-x86` `libgd 2.1.0`
-
-Notes: Seems to only work with VC9 ✔️
-
-__*Not working:*__
-* any php version > php-5.4.45 (because it uses a higher `libgd`)
-* any `libgd` version > `2.0.35` (although the signature and all the color parameters are the same, slight additions to the metadata seems to change the hashsum)
-* any `libjpeg` version > `8d` (different algorithms for newer versions)
-* `libjpeg-turbo` (different algorithm)
-* python gdmodule
-* python PIL
-* python pillow
-
-**New findings:**
-When [building PHP for Windows](https://wiki.php.net/internals/windows/stepbystepbuild), in the [php-sdk archives](https://windows.php.net/downloads/php-sdk/deps/archives), you'll find that VC9 uses `libjpeg 8d`
-
-# ✔️ *Newer findings:*
-
-## Requirements:
-
-* `libgd-2.0.34` or `libgd-2.0.35`
-* A [patched `libjpeg-8d`](https://github.com/winlibs/libjpeg/releases/tag/libjpeg-8d)<sup>[[1](https://wiki.php.net/internals/windows/libs/libjpeg)]</sup>
-
-## What are these?
-`libjpeg` is a jpeg library.
-
-`libgd` is an image processing library like imagemagick written in `C` and uses many libraries to process different image formats.
-
----
-
-# Usage
-### C
-```
-gcc -o thumbgen thumbgen.c -lgd -lpng -lz -ljpeg -lfreetype -lm -static
-./thumbgen orig.jpg thumb.jpg
-```
+To generate checksum-compliant thumbnails you can either use PHP v5.4.15 or later — or manually build `libjpeg-8d` and `libgd` from source.
 
 ### PHP
-```
-php thumbgen.php
+```bash
+$ php tg.php
+$ b3sum pass-thumb-orig.jpg thumb/passs.jpg
+596f127b22fdd937283e9a3e4defdba6819c995a721eb737d27227e109baf163  pass-thumb-orig.jpg
+596f127b22fdd937283e9a3e4defdba6819c995a721eb737d27227e109baf163  thumb/passs.jpg
+
+$ php tg.php
+$ b3sum miss-thumb-orig.jpg thumb/misss.jpg
+7715bcfa13d8bf5597daf7c51caf1dd4ebececce345829bc9700f1f321b4db93  miss-thumb-orig.jpg
+7715bcfa13d8bf5597daf7c51caf1dd4ebececce345829bc9700f1f321b4db93  thumb/misss.jpg
 ```
 
-### Checking
+### C
+The C version is a simple implementation. It's usually hit or miss because PHP's GD is different from standard GD which results in slightly different colors + the C version currently does not account for image dimensions & jpeg quality checks.  
+```bash
+$ ./tg pass.jpg pass-thumb.jpg
+$ b3sum pass-thumb-orig.jpg pass-thumb.jpg
+596f127b22fdd937283e9a3e4defdba6819c995a721eb737d27227e109baf163  pass-thumb-orig.jpg
+596f127b22fdd937283e9a3e4defdba6819c995a721eb737d27227e109baf163  pass-thumb.jpg
 
-__*Hashsums:*__
-```
-python hash.py orig_thumb.jpg
-python hash.py thumb.jpg
+$ ./tg miss.jpg miss-thumb.jpg
+$ b3sum miss-thumb-orig.jpg miss-thumb.jpg
+7715bcfa13d8bf5597daf7c51caf1dd4ebececce345829bc9700f1f321b4db93  miss-thumb-orig.jpg
+d3e6aa1c96a81867618134671f53a3820618151564c892e5eeeefaba03f6ddc2  miss-thumb.jpg
 ```
 
-__*Imagemagick:*__
+### Checking image information
+
+__*Imagemagick:*__  
 <sub>(Note: Installing Imagemagick also installs `libjpeg` and could mess with your `libjpeg-8d` installation. In that scenario, use the `--prefix=` flag when building `libjpeg-8d`)</sub>
 ```
-identify -verbose -features 1 -moments -unique thumb.jpg>thumb.txt
+identify -verbose -features 1 -moments -unique 1583219690557s.jpg > thumb.txt
 ```
----
-# Output
+
+### Building from source
+
+<sup>(Iɴsᴛʀᴜᴄᴛɪᴏɴs ᴄᴜʀʀᴇɴᴛʟʏ ᴏɴʟʏ ғᴏʀ **Lɪɴᴜx**)</sup>
+
+Currently, the only supported filetypes are JPEG images.  
+GIF, PNG, etc are producing different checksums.  
+The reasons the checksums still don't line up is because PHP's gd is different from standard gd.
+
+Sources:
+* PHP's [`libjpeg-8d`](https://github.com/winlibs/libjpeg/releases/tag/libjpeg-8d)<sup>[[1](https://wiki.php.net/internals/windows/libs/libjpeg)]</sup>
+* [`libgd-2.0.35`](http://repository.timesys.com/buildsources/l/libgd/libgd-2.0.35/) or earlier
+* [`libpng-1.2.50`](https://github.com/winlibs/libpng/releases/tag/libpng-1.2.50) <sub>(optional for now)</sub>
+
+#### Build libjpeg
+
 ```bash
-$ python hash.py orig_thumb.jpg
-SHA256: gmYErtMAyZYZobhXZf5+npVf8ZFJJWr959CPHIift2A=
-MD5: 4QIMUT+mn01qiR4cRLQANQ==
-
-$ python hash.py thumb.jpg
-SHA256: gmYErtMAyZYZobhXZf5+npVf8ZFJJWr959CPHIift2A=
-MD5: 4QIMUT+mn01qiR4cRLQANQ==
+$ cd libjpeg-8d
+$ mkdir build
+$ ./configure --prefix=$(pwd)/build
+$ make
+$ sudo make install # Install to prefix
+$ export JPEG_INCLUDE_DIR=$(pwd)/build
 ```
----
-# Installation
 
-(Iɴsᴛʀᴜᴄᴛɪᴏɴs ᴄᴜʀʀᴇɴᴛʟʏ ᴏɴʟʏ ғᴏʀ **Lɪɴᴜx**)
+#### Build libpng
 
-### Build `libjpeg-8d`
-
-
-__*Standard building:*__
 ```bash
-cd libjpeg-libjpeg-8d
-./configure
-make
-sudo make install # Install libjpeg to system
+$ cd libpng-1.2.50
+$ mkdir build
+$ cd build
+$ cmake .. -DCMAKE_INSTALL_PREFIX=$(pwd)/build
+$ make
+$ sudo make install # Install to prefix
+$ export PNG_INCLUDE_DIR=$(pwd)/build
+# Then you have to remove the 12 in libpng12 in $PNG_INCLUDE_DIR/lib by copying files and resymlinking them
 ```
 
-__*To specify the build output location:*__
+#### Build libgd
+
 ```bash
-cd libjpeg-libjpeg-8d
-mkdir jpeg-build
-./configure --prefix=$(pwd)/jpeg-build
-make -j4
-sudo make install # Output libjpeg to jpeg-build dir
+$ cd gd-2.0.35
+$ mkdir build
+$ autoreconf -fi
+$ ./configure --with-jpeg=$JPEG_INCLUDE_DIR --with-png=$PNG_INCLUDE_DIR --x-includes=$PNG_INCLUDE_DIR/include --x-libraries=$PNG_INCLUDE_DIR/lib --with-xpm=no --with-x=no --with-freetype=no --with-fontconfig=no --prefix=$(pwd)/build
+$ make
+$ sudo make install # Install to prefix
 ```
 
-### Build `libgd` `2.0.34` or `2.0.35`
-
-__*Standard building:*__
+#### Compilation
 ```bash
-cd libgd-2.0.35
-./configure --with-png=no --with-xpm=no # auto look for libjpeg
-make
-sudo make install # Install libgd to system
+$ gcc -o tg tg.c -lgd -lpng -lz -ljpeg -lm -static
+
+# Or if you installed the libs locally
+$ gcc -o tg tg.c -I/path/to/gd-2.0.35/build/include -L/path/to/gd-2.0.35/build/lib -lgd -I/path/to/libjpeg-8d/build/include -L/path/to/libjpeg-8d/build/lib -ljpeg -I/path/to/libpng-1.2.50/build/include -L/path/to/libpng-1.2.50/build/build/ -lpng -lz -lm -static
 ```
 
-__*To specify the build output location:*__
-```bash
-cd libgd-2.0.35
-mkdir gd-build
-./configure --prefix=$(pwd)/gd-build --with-png=no --with-xpm=no 
-make -j4
-sudo make install # Output libgd to gd-build dir
-```
+--- 
 
-__*To use & specify the jpeg build from before:*__
-```bash
-./configure --with-png=no --with-xpm=no --with-jpeg=$(pwd)/../libjpeg-libjpeg-8d/jpeg-build
-make -j4
-sudo make install # Install libgd to system
-```
+## How did you do it?
+I looked at the [Futaba](https://www.2chan.net)'s [source code](https://github.com/futoase/futaba-ng) which 4chan is based from + the 4chan source code leak and used the same code they used to generate thumbnails. After finding out which PHP version (5.4.15) was used, I ran `php --re gd` to get the libgd version (2.0.35) and `php --ri gd` to get the libjpeg (8d) & libpng (1.2.50) versions.
 
-__*To uninstall any of the libs:*__
-`make uninstall`
-
----
-
-# Dev scratchpad
-Just for me. My notes in trying to figure all this out. Also me trying to compile the libs for windows.. >_>
-```
-It seems like thumbnail generation depends on the platform and buildtool (gcc/msvc)
-
-http://www.multigesture.net/articles/how-to-upgrade-your-mingw-with-commonly-used-libraries/
-
-https://www.daniweb.com/programming/software-development/threads/438160/png-include-directory-cmake
-Buidling on MSVC
-Open Developer command prompt
-mkdir build-dir && cd build-dir
-cmake ..
-cmake --build . -j4
-# Output is in Debug/static.lib
-```
-
-```
-convert -strip -thumbnail '125x83' -units PixelsPerInch image -density 96 
-
-Find libjpeg version in pillow
-https://stackoverflow.com/a/24397115
-
-ldd /home/shiimizu/.local/lib/python3.7/site-packages/PIL/_imaging.cpython-37m-x86_64-linux-gnu.so
-
-wrting gdmodule
-https://stackoverflow.com/a/16130031
-```
-```
-cmake .. -DZLIB_LIBRARY=deps\zlib.lib -DPNG_LIBRARY=deps\libpng.lib -DJPEG_LIBRARY=deps\jpeg.dll -DFREETYPE_LIBRARY=deps\freetype.lib -DPTHREAD_DIR=deps\pthreads-w32-2-9-1-release\Pre-built.2
-```
-```
-PHP libjpeg (What libjpeg version PHP uses)
-https://wiki.php.net/internals/windows/libs/libjpeg
-```
+### Resources
+* [Building PHP for Windows](https://wiki.php.net/internals/windows/stepbystepbuild)
+* [php-sdk archives](https://windows.php.net/downloads/php-sdk/deps/archives)
+* [PHP archives](https://windows.php.net/downloads/releases/archives/)
