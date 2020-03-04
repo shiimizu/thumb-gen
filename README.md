@@ -19,33 +19,38 @@ Since the start of 2017 and beyond, OP thumbnails use `50` and reply thumbnails 
 
 ## Application
 
-To generate checksum-compliant thumbnails you can either use PHP v5.4.15 or later — or manually build `libjpeg-8d` and `libgd` from source.
+To generate checksum-compliant thumbnails you can either use PHP v5.4.15 or later — or manually build `libjpeg-8d` and `libgd` from source.  
+Images with alpha transparency currently get different results.
 
 ### PHP
 ```bash
 $ php tg.php
-$ b3sum pass-thumb-orig.jpg thumb/passs.jpg
-596f127b22fdd937283e9a3e4defdba6819c995a721eb737d27227e109baf163  pass-thumb-orig.jpg
-596f127b22fdd937283e9a3e4defdba6819c995a721eb737d27227e109baf163  thumb/passs.jpg
+$ b3sum op-thumb-orig.jpg thumb/ops.jpg
+e039f64581ee448e8230146272621b4cc9891d1901f42359b66a76c0ee17916b  op-thumb-orig.jpg
+e039f64581ee448e8230146272621b4cc9891d1901f42359b66a76c0ee17916b  thumb/ops.jpg
 
 $ php tg.php
-$ b3sum miss-thumb-orig.jpg thumb/misss.jpg
-7715bcfa13d8bf5597daf7c51caf1dd4ebececce345829bc9700f1f321b4db93  miss-thumb-orig.jpg
-7715bcfa13d8bf5597daf7c51caf1dd4ebececce345829bc9700f1f321b4db93  thumb/misss.jpg
+$ b3sum reply-thumb-orig.jpg thumb/replys.jpg
+7715bcfa13d8bf5597daf7c51caf1dd4ebececce345829bc9700f1f321b4db93  reply-thumb-orig.jpg
+7715bcfa13d8bf5597daf7c51caf1dd4ebececce345829bc9700f1f321b4db93  thumb/replys.jpg
+
+$ php tg.php
+$ b3sum alpha-thumb-orig.jpg thumb/alphas.jpg
+59ddd640d38aa3f9e40ff81e35755877d2fa4b2f9371ac86572452e85f204701  alpha-thumb-orig.jpg
+53f9104352ea363eb0106e38bf9c66e65d290594aeb0c713b7c926c1d3b1a6d8  thumb/alphas.jpg
 ```
 
 ### C
-The C version is a simple implementation. It's usually hit or miss because PHP's GD is different from standard GD which results in slightly different colors + the C version currently does not account for image dimensions & jpeg quality checks.  
 ```bash
-$ ./tg pass.jpg pass-thumb.jpg
-$ b3sum pass-thumb-orig.jpg pass-thumb.jpg
-596f127b22fdd937283e9a3e4defdba6819c995a721eb737d27227e109baf163  pass-thumb-orig.jpg
-596f127b22fdd937283e9a3e4defdba6819c995a721eb737d27227e109baf163  pass-thumb.jpg
+$ ./tg op.jpg op-new.jpg 0
+$ b3sum op-thumb-orig.jpg op-new.jpg
+e039f64581ee448e8230146272621b4cc9891d1901f42359b66a76c0ee17916b  op-thumb-orig.jpg
+e039f64581ee448e8230146272621b4cc9891d1901f42359b66a76c0ee17916b  op-new.jpg
 
-$ ./tg miss.jpg miss-thumb.jpg
-$ b3sum miss-thumb-orig.jpg miss-thumb.jpg
-7715bcfa13d8bf5597daf7c51caf1dd4ebececce345829bc9700f1f321b4db93  miss-thumb-orig.jpg
-d3e6aa1c96a81867618134671f53a3820618151564c892e5eeeefaba03f6ddc2  miss-thumb.jpg
+$ ./tg reply.jpg reply-new.jpg
+$ b3sum reply-thumb-orig.jpg reply-new.jpg
+7715bcfa13d8bf5597daf7c51caf1dd4ebececce345829bc9700f1f321b4db93  reply-thumb-orig.jpg
+7715bcfa13d8bf5597daf7c51caf1dd4ebececce345829bc9700f1f321b4db93  reply-new.jpg
 ```
 
 ### Checking image information
@@ -59,10 +64,6 @@ identify -verbose -features 1 -moments -unique 1583219690557s.jpg > thumb.txt
 ### Building from source
 
 <sup>(Iɴsᴛʀᴜᴄᴛɪᴏɴs ᴄᴜʀʀᴇɴᴛʟʏ ᴏɴʟʏ ғᴏʀ **Lɪɴᴜx**)</sup>
-
-Currently, the only supported filetypes are JPEG images.  
-GIF, PNG, etc are producing different checksums.  
-The reasons the checksums still don't line up is because PHP's gd is different from standard gd.
 
 Sources:
 * PHP's [`libjpeg-8d`](https://github.com/winlibs/libjpeg/releases/tag/libjpeg-8d)<sup>[[1](https://wiki.php.net/internals/windows/libs/libjpeg)]</sup>
@@ -96,7 +97,7 @@ $ export PNG_INCLUDE_DIR=$(pwd)/build
 #### Build libgd
 
 ```bash
-$ cd gd-2.0.35
+$ cd gd-2.0.35 # Then apply the patches from the repo 
 $ mkdir build
 $ autoreconf -fi
 $ ./configure --with-jpeg=$JPEG_INCLUDE_DIR --with-png=$PNG_INCLUDE_DIR --x-includes=$PNG_INCLUDE_DIR/include --x-libraries=$PNG_INCLUDE_DIR/lib --with-xpm=no --with-x=no --with-freetype=no --with-fontconfig=no --prefix=$(pwd)/build

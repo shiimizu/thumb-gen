@@ -6,7 +6,7 @@ define("MAXR_W", '125');
 define("MAXR_H", '125');
 define("ENABLE_PDF", 0);
 
-thumb("./", "pass", ".jpg", true);
+thumb("./", "alpha", ".png", false);
 
 // resto -> For replies: this is the ID of the thread being replied to. For OP: this value is zero
 function thumb($path, $tim, $ext, $resto)
@@ -99,6 +99,32 @@ function thumb($path, $tim, $ext, $resto)
     } else {
         $im_out = ImageCreate($out_w, $out_h);
     }
+
+
+    switch ($size[2]) {
+        case 1:
+            imagesavealpha( $im_out, false );
+            $color = imagecolorallocate($im_out,  239, 241, 253);
+                    //imagecolorallocatealpha
+            imagefill($im_out, 0, 0, $color);
+            // echo "gif\n";
+            break;
+        case 2:
+            // echo "jpg\n";
+            break;
+        case 3:
+            // imagealphablending( $im_out, true );
+            imagesavealpha( $im_out, false );
+            $color = imagecolorallocate($im_out,  239, 241, 253);
+                    //imagecolorallocatealpha
+            imagefill($im_out, 0, 0, $color);
+            // echo "png\n";
+            break;
+        default:
+            break;
+    }
+
+
     // copy resized original
     ImageCopyResampled($im_out, $im_in, 0, 0, 0, 0, $out_w, $out_h, $size[0], $size[1]);
     // thumbnail saved
