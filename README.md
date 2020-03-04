@@ -19,7 +19,7 @@ Since the start of 2017 and beyond, OP thumbnails use `50` and reply thumbnails 
 
 ## Application
 
-To generate checksum-compliant thumbnails you can either use PHP v5.4.15 or later — or manually build `libjpeg-8d` and `libgd` from source.  
+To generate checksum-compliant thumbnails you can either use PHP v5.4.15 or later — or manually build `libjpeg-8d` and `libgd` from source — or [download](https://github.com/shiimizu/thumb-gen/releases/latest) the pre-built binaries.  
 Images with alpha transparency currently get different results.
 
 ### PHP
@@ -68,7 +68,7 @@ identify -verbose -features 1 -moments -unique 1583219690557s.jpg > thumb.txt
 Sources:
 * PHP's [`libjpeg-8d`](https://github.com/winlibs/libjpeg/releases/tag/libjpeg-8d)<sup>[[1](https://wiki.php.net/internals/windows/libs/libjpeg)]</sup>
 * [`libgd-2.0.35`](http://repository.timesys.com/buildsources/l/libgd/libgd-2.0.35/) or earlier
-* [`libpng-1.2.50`](https://github.com/winlibs/libpng/releases/tag/libpng-1.2.50) <sub>(optional for now)</sub>
+* [`libpng-1.2.50`](https://github.com/winlibs/libpng/releases/tag/libpng-1.2.50)
 
 #### Build libjpeg
 
@@ -97,7 +97,7 @@ $ export PNG_INCLUDE_DIR=$(pwd)/build
 #### Build libgd
 
 ```bash
-$ cd gd-2.0.35 # Then apply the patches from the repo 
+$ cd libgd-2.0.35 # Then apply the patches from the repo 
 $ mkdir build
 $ autoreconf -fi
 $ ./configure --with-jpeg=$JPEG_INCLUDE_DIR --with-png=$PNG_INCLUDE_DIR --x-includes=$PNG_INCLUDE_DIR/include --x-libraries=$PNG_INCLUDE_DIR/lib --with-xpm=no --with-x=no --with-freetype=no --with-fontconfig=no --prefix=$(pwd)/build
@@ -110,7 +110,7 @@ $ sudo make install # Install to prefix
 $ gcc -o tg tg.c -lgd -lpng -lz -ljpeg -lm -static
 
 # Or if you installed the libs locally
-$ gcc -o tg tg.c -I/path/to/gd-2.0.35/build/include -L/path/to/gd-2.0.35/build/lib -lgd -I/path/to/libjpeg-8d/build/include -L/path/to/libjpeg-8d/build/lib -ljpeg -I/path/to/libpng-1.2.50/build/include -L/path/to/libpng-1.2.50/build/build/ -lpng -lz -lm -static
+$ gcc -o tg tg.c -I/path/to/libgd-2.0.35/build/include -L/path/to/libgd-2.0.35/build/lib -lgd -I/path/to/libjpeg-8d/build/include -L/path/to/libjpeg-8d/build/lib -ljpeg -I/path/to/libpng-1.2.50/build/include -L/path/to/libpng-1.2.50/build/build/ -lpng -lz -lm -static
 ```
 
 --- 
