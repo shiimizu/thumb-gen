@@ -1,7 +1,7 @@
 # Thumbnail creation
 
 4chan uses PHP to generate their thumbnails (and run their site).  
-PHP uses their own `libgd` (image processing library) which also uses their `libjpeg-8d`.  
+PHP uses their own `libgd` (image processing library) which also uses their own `libjpeg-8d`.  
 
 ## Media Characteristics
 Before 2017, thumbnails used the same jpeg quality: `60`.  
