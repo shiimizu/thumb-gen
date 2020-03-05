@@ -6,7 +6,7 @@ define("MAXR_W", '125');
 define("MAXR_H", '125');
 define("ENABLE_PDF", 0);
 
-thumb("./", "dance", ".gif", false);
+thumb("./", "dance", ".gif", true);
 
 // resto -> For replies: this is the ID of the thread being replied to. For OP: this value is zero
 function thumb($path, $tim, $ext, $resto)
@@ -85,6 +85,11 @@ function thumb($path, $tim, $ext, $resto)
         ($key_w < $key_h) ? $keys = $key_w : $keys = $key_h;
         $out_w = floor($size[0] * $keys);
         $out_h = floor($size[1] * $keys);
+	   echo $size[1];
+		echo "\n";
+	   echo imagesy($im_in);
+		echo "\n";
+	
         /*if ($size[2]==1) {
         $out_w = $size[0];
         $out_h = $size[1];
