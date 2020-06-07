@@ -1,37 +1,63 @@
 <?php
-define("THUMB_DIR", 'thumb/'); //サムネイル保存ディレクトリ
-define("MAX_W", '250'); //投稿サイズ幅（これ以上はwidthを縮小
+define("THUMB_DIR", 'thumb/');	//サムネイル保存ディレクトリ
+define("MAX_W", '250'); 		//投稿サイズ幅（これ以上はwidthを縮小
 define("MAX_H", '250');
 define("MAXR_W", '125');
 define("MAXR_H", '125');
 define("ENABLE_PDF", 0);
 
-thumb("./", "dance", ".gif", true);
+if (!($argc == 3 || $argc == 4 || $argc == 5)) {
+    usage();
+    return 1;
+}
 
-// resto -> For replies: this is the ID of the thread being replied to. For OP: this value is zero
-function thumb($path, $tim, $ext, $resto)
+// Defaults
+$self = $argv[0];
+$filename = $argv[1];
+$out = $argv[2];
+$reply = true;
+$sfw = true;
+
+if ($argc > 3) {
+    $reply = $argv[3];
+    if ($argc > 4) {
+        $sfw = $argv[4];
+    }
+}
+
+if (file_exists($filename)) {
+    thumb($filename, $out, $reply, $sfw);
+} else {
+    printf("`%s` does not exist.", $filename);
+    return 1;
+}
+
+function usage() {
+    printf("Generate thumbnails from 4chan\n");
+    printf("%s  <input-file>  <output-file>  [reply?1:0]  [sfw-board?1:0]\n", $self);
+    return;
+}
+
+// reply -> 0 if OP, true if it's a reply post.
+function thumb($path, $outpath, $reply, $sfw)
 {
     if (!function_exists("ImageCreate") || !function_exists("ImageCreateFromJPEG"))
         return;
-    $fname     = $path . $tim . $ext;
-    $thumb_dir = THUMB_DIR; //thumbnail directory
-    $outpath   = $thumb_dir . $tim . 's.jpg';
-    if( is_dir($thumb_dir) === false ) {
-        mkdir($thumb_dir);
-    }
-    if (!$resto) {
-        $width  = MAX_W; //output width
-        $height = MAX_H; //output height
-        $jpg_quality = 50;
-    } else {
+	$path_parts = pathinfo($path);
+    $fname     = $path;
+    if ($reply) {
         $width  = MAXR_W; //output width (imgreply)
         $height = MAXR_H; //output height (imgreply)
         $jpg_quality = 40;
+    } else {
+        $width  = MAX_W; //output width
+        $height = MAX_H; //output height
+        $jpg_quality = 50;
     }
     // width, height, and type are aquired
     if (ENABLE_PDF == 1 && $ext == '.pdf') {
         // create jpeg for the thumbnailer
-        $pdfjpeg = $path . $tim . '.pdf.tmp';
+        $pdfjpeg = $outpath . '.pdf.tmp';
         @exec("/usr/local/bin/gs -q -dSAFER -dNOPAUSE -dBATCH -sDEVICE=jpeg -sOutputFile=$pdfjpeg $fname");
         if (!file_exists($pdfjpeg))
             unlink($fname);
@@ -54,10 +80,10 @@ function thumb($path, $tim, $ext, $resto)
             if (!is_executable(realpath("/www/global/gif2png")) || !function_exists("ImageCreateFromPNG"))
                 return;
             @exec(realpath("/www/global/gif2png") . " $fname", $a);
-            if (!file_exists($path . $tim . '.png'))
-                return;
-            $im_in = ImageCreateFromPNG($path . $tim . '.png');
-            unlink($path . $tim . '.png');
+            // if (!file_exists($fname))
+                // return;
+            $im_in = ImageCreateFromPNG($fname);
+            unlink($fname);
             if (!$im_in)
                 return;
             break;
@@ -101,15 +127,22 @@ function thumb($path, $tim, $ext, $resto)
         $im_out = ImageCreate($out_w, $out_h);
     }
 
-    // Transparency
+    // Transparency  to solid color
     switch ($size[2]) {
         case 1:
         case 3:
             // echo "gif or png\n";
-            // $color = imagecolorallocate($im_out,  255, 255, 238);            // orange board op      // FFFFEE
-            $color = imagecolorallocate($im_out,  240, 224, 214);               // orange board reply   // F0E0D6
-            // $color = imagecolorallocatealpha($im_out,  238, 242, 255, 0);    // blue board OP        // EEF2FF
-            // $color = imagecolorallocate($im_out,  214, 218, 240);            // blue board reply     // D6DAF0
+	        if ($reply) { /* Reply */
+	            // blue board reply     // D6DAF0
+        		// or
+				// orange board reply   // F0E0D6
+       			$color = $sfw ? imagecolorallocate($im_out,  214, 218, 240) : imagecolorallocate($im_out,  240, 224, 214);
+	        } else { /* OP */
+            	// blue board OP        // EEF2FF
+            	// or
+            	// orange board op      // FFFFEE
+        		$color = $sfw ? imagecolorallocatealpha($im_out,  238, 242, 255, 0) : imagecolorallocate($im_out,  255, 255, 238);
+	        }
             imagefill($im_out, 0, 0, $color);
             break;
         default:
@@ -124,7 +157,7 @@ function thumb($path, $tim, $ext, $resto)
 
     // thumbnail saved
     ImageJPEG($im_out, $outpath, $jpg_quality);
-    chmod($thumb_dir.$tim.'s.jpg',0666);
+    chmod($outpath,0666);
 
     // created image is destroyed
     ImageDestroy($im_in);
