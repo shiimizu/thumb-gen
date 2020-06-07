@@ -1,4 +1,7 @@
 <?php
+// This is to be used internally in your project.
+// If you want a CLI tool, see tg.php
+
 define("THUMB_DIR", 'thumb/');	//サムネイル保存ディレクトリ
 define("MAX_W", '250'); 		//投稿サイズ幅（これ以上はwidthを縮小
 define("MAX_H", '250');
