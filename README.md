@@ -19,30 +19,36 @@ Since the start of 2017 and beyond, OP thumbnails use `50` and reply thumbnails 
 
 ## Application
 
-To generate checksum-compliant thumbnails you can either use PHP v5.4.15 or later — or manually build `libjpeg-8d` and `libgd` from source — or [download](https://github.com/shiimizu/thumb-gen/releases/latest) the pre-built binaries.  
+To generate checksum-compliant thumbnails you have the following options:  
+* Use PHP v5.4.15 or later to run the PHP script
+* Download the [latest](https://github.com/shiimizu/thumb-gen/releases/latest) the pre-built binaries  
+* Manually build `libjpeg-8d` and `libgd` from source
 
 ### PHP
-When dealing with transparent images, modify the script to reflect the right type of board where necessary.   
 ```console
 $ php tg.php
-$ b3sum op-thumb-orig.jpg thumb/ops.jpg
-e039f64581ee448e8230146272621b4cc9891d1901f42359b66a76c0ee17916b  op-thumb-orig.jpg
+$ Generate thumbnails from 4chan
+tg.php  <input-file>  <output-file>  [reply?1:0]  [sfw-board?1:0]
+
+$ php tg.php img/op.jpg op-new.jpg 0
+$ b3sum img/op-thumb-orig.jpg op-new.jpg
+e039f64581ee448e8230146272621b4cc9891d1901f42359b66a76c0ee17916b  img/op-thumb-orig.jpg
 e039f64581ee448e8230146272621b4cc9891d1901f42359b66a76c0ee17916b  thumb/ops.jpg
 
-$ php tg.php
-$ b3sum reply-thumb-orig.jpg thumb/replys.jpg
-7715bcfa13d8bf5597daf7c51caf1dd4ebececce345829bc9700f1f321b4db93  reply-thumb-orig.jpg
-7715bcfa13d8bf5597daf7c51caf1dd4ebececce345829bc9700f1f321b4db93  thumb/replys.jpg
+$ php tg.php img/reply.jpg reply-new.jpg
+$ b3sum img/reply-thumb-orig.jpg reply-new.jpg
+7715bcfa13d8bf5597daf7c51caf1dd4ebececce345829bc9700f1f321b4db93  img/reply-thumb-orig.jpg
+7715bcfa13d8bf5597daf7c51caf1dd4ebececce345829bc9700f1f321b4db93  reply-new.jpg
 
-$ php tg.php
-$ b3sum alpha-thumb-orig.jpg thumb/alphas.jpg
-59ddd640d38aa3f9e40ff81e35755877d2fa4b2f9371ac86572452e85f204701  alpha-thumb-orig.jpg
-59ddd640d38aa3f9e40ff81e35755877d2fa4b2f9371ac86572452e85f204701  thumb/alphas.jpg
+$ php tg.php img/alpha-new.jpg 0
+$ b3sum img/alpha-thumb-orig.jpg alpha-new.jpg
+59ddd640d38aa3f9e40ff81e35755877d2fa4b2f9371ac86572452e85f204701  img/alpha-thumb-orig.jpg
+59ddd640d38aa3f9e40ff81e35755877d2fa4b2f9371ac86572452e85f204701  alpha-new.jpg
 
-$ php tg.php
-$ b3sum dance-thumb-orig.jpg thumb/dances.jpg
-4270149933bcb5d5cac3bb5934c4422249b38e73c3347ee5f8377d8235cb0c3f dance-thumb-orig.jpg
-4270149933bcb5d5cac3bb5934c4422249b38e73c3347ee5f8377d8235cb0c3f thumb/dances.jpg
+$ php tg.php img/dance.gif dance-new.jpg 1 0
+$ b3sum img/dance-thumb-orig.jpg dance-new.jpg
+4270149933bcb5d5cac3bb5934c4422249b38e73c3347ee5f8377d8235cb0c3f img/dance-thumb-orig.jpg
+4270149933bcb5d5cac3bb5934c4422249b38e73c3347ee5f8377d8235cb0c3f dance-new.jpg
 ```
 
 ### C  
@@ -52,24 +58,24 @@ $ ./tg
 $ Generate thumbnails from 4chan
 ./tg  <input-file>  <output-file>  [reply?1:0]  [sfw-board?1:0]
 
-$ ./tg op.jpg op-new.jpg 0
-$ b3sum op-thumb-orig.jpg op-new.jpg
-e039f64581ee448e8230146272621b4cc9891d1901f42359b66a76c0ee17916b  op-thumb-orig.jpg
+$ ./tg img/op.jpg op-new.jpg 0
+$ b3sum img/op-thumb-orig.jpg op-new.jpg
+e039f64581ee448e8230146272621b4cc9891d1901f42359b66a76c0ee17916b  img/op-thumb-orig.jpg
 e039f64581ee448e8230146272621b4cc9891d1901f42359b66a76c0ee17916b  op-new.jpg
 
-$ ./tg reply.jpg reply-new.jpg
-$ b3sum reply-thumb-orig.jpg reply-new.jpg
-7715bcfa13d8bf5597daf7c51caf1dd4ebececce345829bc9700f1f321b4db93  reply-thumb-orig.jpg
+$ ./tg img/reply.jpg reply-new.jpg
+$ b3sum img/reply-thumb-orig.jpg reply-new.jpg
+7715bcfa13d8bf5597daf7c51caf1dd4ebececce345829bc9700f1f321b4db93  img/reply-thumb-orig.jpg
 7715bcfa13d8bf5597daf7c51caf1dd4ebececce345829bc9700f1f321b4db93  reply-new.jpg
 
-$ ./tg alpha.png alpha-new.jpg 0
-$ b3sum alpha-thumb-orig.jpg alpha-new.jpg
-59ddd640d38aa3f9e40ff81e35755877d2fa4b2f9371ac86572452e85f204701  alpha-thumb-orig.jpg
+$ ./tg img/alpha.png alpha-new.jpg 0
+$ b3sum img/alpha-thumb-orig.jpg alpha-new.jpg
+59ddd640d38aa3f9e40ff81e35755877d2fa4b2f9371ac86572452e85f204701  img/alpha-thumb-orig.jpg
 59ddd640d38aa3f9e40ff81e35755877d2fa4b2f9371ac86572452e85f204701  alpha-new.jpg
 
-$ ./tg dance.gif dance-new.jpg 1 0
-$ b3sum dance-thumb-orig.jpg dance-new.jpg
-4270149933bcb5d5cac3bb5934c4422249b38e73c3347ee5f8377d8235cb0c3f  dance-thumb-orig.jpg
+$ ./tg img/dance.gif dance-new.jpg 1 0
+$ b3sum img/dance-thumb-orig.jpg dance-new.jpg
+4270149933bcb5d5cac3bb5934c4422249b38e73c3347ee5f8377d8235cb0c3f  img/dance-thumb-orig.jpg
 ac4988a8e7b724dbe2c31c54914d25e1cab641a9d899c26900bf8d4970f791b4  dance-new.jpg
 ```
 
