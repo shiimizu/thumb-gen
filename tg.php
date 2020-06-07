@@ -7,12 +7,11 @@ define("MAXR_H", '125');
 define("ENABLE_PDF", 0);
 
 if (!($argc == 3 || $argc == 4 || $argc == 5)) {
-    usage();
+    usage($argv[0]);
     return 1;
 }
 
 // Defaults
-$self = $argv[0];
 $filename = $argv[1];
 $out = $argv[2];
 $reply = true;
@@ -32,7 +31,7 @@ if (file_exists($filename)) {
     return 1;
 }
 
-function usage() {
+function usage($self) {
     printf("Generate thumbnails from 4chan\n");
     printf("%s  <input-file>  <output-file>  [reply?1:0]  [sfw-board?1:0]\n", $self);
     return;
