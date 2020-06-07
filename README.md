@@ -21,13 +21,13 @@ Since the start of 2017 and beyond, OP thumbnails use `50` and reply thumbnails 
 
 To generate checksum-compliant thumbnails you have the following options:  
 * Use PHP v5.4.15 or later to run the PHP script
-* Download the [latest](https://github.com/shiimizu/thumb-gen/releases/latest) the pre-built binaries  
+* Download the [latest](https://github.com/shiimizu/thumb-gen/releases/latest) pre-built binaries  
 * Manually build `libjpeg-8d` and `libgd` from source
 
 ### PHP
 ```console
 $ php tg.php
-$ Generate thumbnails from 4chan
+Generate thumbnails from 4chan
 tg.php  <input-file>  <output-file>  [reply?1:0]  [sfw-board?1:0]
 
 $ php tg.php img/op.jpg op-new.jpg 0
@@ -55,7 +55,7 @@ $ b3sum img/dance-thumb-orig.jpg dance-new.jpg
 On rare occasions, animated gifs currently produce different results.  
 ```console
 $ ./tg
-$ Generate thumbnails from 4chan
+Generate thumbnails from 4chan
 ./tg  <input-file>  <output-file>  [reply?1:0]  [sfw-board?1:0]
 
 $ ./tg img/op.jpg op-new.jpg 0
