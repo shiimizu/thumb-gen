@@ -95,7 +95,7 @@ Sources:
 * [`libpng-1.2.50`](https://github.com/winlibs/libpng/releases/tag/libpng-1.2.50) (optional)
 * [`libjpeg-8d`](https://github.com/winlibs/libjpeg/releases/tag/libjpeg-8d)<sup>[[1](https://wiki.php.net/internals/windows/libs/libjpeg)]</sup>
 * [`php5`](https://museum.php.net/php5/)
-* [koio](https://drewdevault.com/2018/05/29/Embedding-files-in-C.html)
+* [`koio`](https://drewdevault.com/2018/05/29/Embedding-files-in-C.html)
 
 #### Build libzlib
 
