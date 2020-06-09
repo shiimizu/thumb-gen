@@ -22,7 +22,7 @@ Since the start of 2017 and beyond, OP thumbnails use `50` and reply thumbnails 
 To generate checksum-compliant thumbnails you have the following options:  
 * Use PHP v5.4.15 or later to run the PHP script
 * Download the [latest](https://github.com/shiimizu/thumb-gen/releases/latest) pre-built binaries  
-* Manually build `libjpeg-8d` and `libgd` from source
+* Manually build from source
 
 ### PHP
 ```console
@@ -47,12 +47,11 @@ $ b3sum img/alpha-thumb-orig.jpg alpha-new.jpg
 
 $ php tg.php img/dance.gif dance-new.jpg 1 0
 $ b3sum img/dance-thumb-orig.jpg dance-new.jpg
-4270149933bcb5d5cac3bb5934c4422249b38e73c3347ee5f8377d8235cb0c3f img/dance-thumb-orig.jpg
-4270149933bcb5d5cac3bb5934c4422249b38e73c3347ee5f8377d8235cb0c3f dance-new.jpg
+4270149933bcb5d5cac3bb5934c4422249b38e73c3347ee5f8377d8235cb0c3f  img/dance-thumb-orig.jpg
+4270149933bcb5d5cac3bb5934c4422249b38e73c3347ee5f8377d8235cb0c3f  dance-new.jpg
 ```
 
-### C  
-On rare occasions, animated gifs currently produce different results.  
+### C binary executable 
 ```console
 $ ./tg
 Generate thumbnails from 4chan
@@ -76,7 +75,7 @@ $ b3sum img/alpha-thumb-orig.jpg alpha-new.jpg
 $ ./tg img/dance.gif dance-new.jpg 1 0
 $ b3sum img/dance-thumb-orig.jpg dance-new.jpg
 4270149933bcb5d5cac3bb5934c4422249b38e73c3347ee5f8377d8235cb0c3f  img/dance-thumb-orig.jpg
-ac4988a8e7b724dbe2c31c54914d25e1cab641a9d899c26900bf8d4970f791b4  dance-new.jpg
+4270149933bcb5d5cac3bb5934c4422249b38e73c3347ee5f8377d8235cb0c3f  dance-new.jpg
 ```
 
 ### Checking image information
@@ -92,57 +91,107 @@ identify -verbose -features 1 -moments -unique 1583219690557s.jpg > thumb.txt
 <sup>(Iɴsᴛʀᴜᴄᴛɪᴏɴs ᴄᴜʀʀᴇɴᴛʟʏ ᴏɴʟʏ ғᴏʀ **Lɪɴᴜx**)</sup>
 
 Sources:
+* `libzlib` (optional)
+* [`libpng-1.2.50`](https://github.com/winlibs/libpng/releases/tag/libpng-1.2.50) (optional)
 * [`libjpeg-8d`](https://github.com/winlibs/libjpeg/releases/tag/libjpeg-8d)<sup>[[1](https://wiki.php.net/internals/windows/libs/libjpeg)]</sup>
-* [`libgd-2.0.35`](http://repository.timesys.com/buildsources/l/libgd/libgd-2.0.35/) or earlier
-* [`libpng-1.2.50`](https://github.com/winlibs/libpng/releases/tag/libpng-1.2.50)
+* [`php5`](https://museum.php.net/php5/)
+* [koio](https://drewdevault.com/2018/05/29/Embedding-files-in-C.html)
 
-#### Build libjpeg
+#### Build libzlib
 
 ```bash
-$ cd libjpeg-8d
-$ mkdir build
-$ ./configure --prefix=$(pwd)/build
+$ cd zlib-1.2.11
+$ ./configure --prefix=$(pwd)/build --static --64
 $ make
 $ sudo make install # Install to prefix
-$ export JPEG_INCLUDE_DIR=$(pwd)/build
+$ export ZLIB_DIR=$(pwd)/build
 ```
 
 #### Build libpng
 
 ```bash
 $ cd libpng-1.2.50
-$ mkdir build
 $ cp scripts/makefile.linux Makefile # Then edit the Makefile and change the prefix to $(pwd)/build
 $ make
 $ sudo make install # Install to prefix
-$ export PNG_INCLUDE_DIR=$(pwd)/build
+$ mkdir -p build/include build/lib
+$ export PNG_DIR=$(pwd)/build
+$ cp *.h $PNG_DIR/include
+$ cp *.a *.so $PNG_DIR/lib
 ```
 
-#### Build libgd
+#### Build libjpeg
 
 ```bash
-$ cd libgd-2.0.35 # Then apply the patches from the repo 
-$ mkdir build
-$ autoreconf -fi
-$ ./configure --with-jpeg=$JPEG_INCLUDE_DIR --with-png=$PNG_INCLUDE_DIR --x-includes=$PNG_INCLUDE_DIR/include --x-libraries=$PNG_INCLUDE_DIR/lib --with-xpm=no --with-x=no --with-freetype=no --with-fontconfig=no --prefix=$(pwd)/build
+$ cd libjpeg-8d
+$ ./configure --prefix=$(pwd)/build --enable-static
 $ make
 $ sudo make install # Install to prefix
+$ export JPEG_DIR=$(pwd)/build
+```
+
+#### Build php5
+
+```bash
+$ cd php-5.4.15
+$ ./buildconf --force
+
+# If the configure below doesn't work try
+# 	autoreconf -fi
+# or
+# 	aclocal; libtoolize --force; autoheader; autoconf
+# and run configure again
+
+$ CFLAGS="-I$ZLIB_DIR/include -I$PNG_DIR/include -I$JPEG_DIR/include" LDFLAGS="-L$ZLIB_DIR/lib -L$PNG_DIR/lib -L$JPEG_DIR/lib" ./configure --prefix=$(pwd)/dist --with-zlib=$ZLIB_DIR --with-zlib-dir=$ZLIB_DIR  --with-png-dir=$PNG_DIR --with-jpeg-dir=$JPEG_DIR --disable-all --disable-libxml --disable-dom --disable-simplexml --disable-xml --disable-xmlreader --disable-xmlwriter --without-pear --without-iconv --enable-debug --enable-cli --with-gd --enable-static --enable-embed=static
+
+# For static builds: --enable-static --enable-embed=static
+
+$ make -j 4
+$ make install -j 4
+$ export PHP_DIR=$(pwd)/build
+```
+
+#### Build koio
+
+```bash
+$ meson setup build --prefix=/ --buildtype=release --default-library=both
+$ ninja -C build
+$ DESTDIR=../dist/ ninja -C build install
+$ export KOIO_DIR=$(pwd)/dist
+# Then fix the library folders in dist/lib
 ```
 
 #### Compilation
+
+Finally. Let's compile our program.
+
+[minify](https://php-minify.com/) the php script then run [koio](https://drewdevault.com/2018/05/29/Embedding-files-in-C.html) <sup>(yes you have to build this too)</sup> to generate a c source file that embeds the script
+
 ```bash
-$ gcc -o tg tg.c -lgd -lpng -lz -ljpeg -lm -static
+$ koio -o asset.c tg.php://tg.php
+```
+
+```bash
+$ cc -o tg tg.c asset.c -lphp5 -lpng -ljpeg -lz -lkoio -static
 
 # Or if you installed the libs locally
-$ gcc -o tg tg.c -I/path/to/libgd-2.0.35/build/include -L/path/to/libgd-2.0.35/build/lib -lgd -I/path/to/libjpeg-8d/build/include -L/path/to/libjpeg-8d/build/lib -ljpeg -I/path/to/libpng-1.2.50/build/include -L/path/to/libpng-1.2.50/build/build/ -lpng -lz -lm -static
+$ cc -o tg tg.c asset.c -I$PHP_DIR/include -I$PHP_DIR/include/php -I$PHP_DIR/include/php/include -I$PHP_DIR/include/php/main -I$PHP_DIR/include/php/Zend -I$PHP_DIR/include/php/TSRM -I$PHP_DIR/include/php/main/streams -I$ZLIB_DIR/include -I$PNG_DIR/include -I$JPEG_DIR/include -L$ZLIB_DIR/lib -L$PNG_DIR/lib -L$JPEG_DIR/lib -L$PHP_DIR/lib -I$KOIO_DIR/include -L$KOIO_DIR/lib -lphp5 -lpng -ljpeg -lz -lkoio -static
 ```
 
 --- 
+## How does it work?
+PHP is built and statically linked against [`musl`](https://musl.cc). Using the `Zend` (PHP's core engine) API in our C code allows us to run an identical VM that made the original thumbnails.
+
+> But that's basically just the PHP CLI then?!  
+
+This is statically linked, and smaller, hence portable. Furthermore, it has one clear purpose, rather than being a general script runner/interpreter. You could say the PHP script was packaged into a single binary.  
+
 
 ## How did you do it?
 I looked at the [Futaba](https://www.2chan.net)'s [source code](https://github.com/futoase/futaba-ng) which 4chan is based from + the 4chan source code leak and used the same code they used to generate thumbnails. After finding out which PHP version (5.4.15) was used, I ran `php --re gd | grep GD` to get the libgd version (2.0.35) and `php --ri gd` to get the libjpeg (8d) & libpng (1.2.50) versions.
 
 ### Resources
+* [PHP5 archives](https://museum.php.net/php5/)
 * [Building PHP for Windows](https://wiki.php.net/internals/windows/stepbystepbuild)
 * [php-sdk archives](https://windows.php.net/downloads/php-sdk/deps/archives)
-* [PHP archives](https://windows.php.net/downloads/releases/archives/)
+* [PHP Windows archives](https://windows.php.net/downloads/releases/archives/)

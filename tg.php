@@ -1,9 +1,10 @@
 <?php
-define("THUMB_DIR", 'thumb/');	//サムネイル保存ディレクトリ
-define("MAX_W", '250'); 		//投稿サイズ幅（これ以上はwidthを縮小
-define("MAX_H", '250');
-define("MAXR_W", '125');
-define("MAXR_H", '125');
+// This file should be in LF ending
+define("THUMB_DIR", "thumb/");	//サムネイル保存ディレクトリ
+define("MAX_W", "250"); 		//投稿サイズ幅（これ以上はwidthを縮小
+define("MAX_H", "250");
+define("MAXR_W", "125");
+define("MAXR_H", "125");
 define("ENABLE_PDF", 0);
 
 if (!($argc == 3 || $argc == 4 || $argc == 5)) {
@@ -24,10 +25,10 @@ if ($argc > 3) {
     }
 }
 
-if (file_exists($filename)) {
+if (file_exists($filename) && !is_dir($filename)) {
     thumb($filename, $out, $reply, $sfw);
 } else {
-    printf("`%s` does not exist.", $filename);
+    printf("Unknown file: `$s`\n", $filename);
     return 1;
 }
 
@@ -37,7 +38,7 @@ function usage($self) {
     return;
 }
 
-// reply -> 0 if OP, true if it's a reply post.
+// reply -> 0 if OP, true if it"s a reply post.
 function thumb($path, $outpath, $reply, $sfw)
 {
     if (!function_exists("ImageCreate") || !function_exists("ImageCreateFromJPEG"))
@@ -53,10 +54,10 @@ function thumb($path, $outpath, $reply, $sfw)
         $height = MAX_H; //output height
         $jpg_quality = 50;
     }
-    // width, height, and type are aquired
-    if (ENABLE_PDF == 1 && $ext == '.pdf') {
+    // width, height, and type are acquired
+    if (ENABLE_PDF == 1 && $ext == ".pdf") {
         // create jpeg for the thumbnailer
-        $pdfjpeg = $outpath . '.pdf.tmp';
+        $pdfjpeg = $outpath . ".pdf.tmp";
         @exec("/usr/local/bin/gs -q -dSAFER -dNOPAUSE -dBATCH -sDEVICE=jpeg -sOutputFile=$pdfjpeg $fname");
         if (!file_exists($pdfjpeg))
             unlink($fname);
@@ -66,7 +67,7 @@ function thumb($path, $outpath, $reply, $sfw)
     $memory_limit_increased = false;
     if ($size[0] * $size[1] > 3000000) {
         $memory_limit_increased = true;
-        ini_set('memory_limit', memory_get_usage() + $size[0] * $size[1] * 10); // for huge images
+        ini_set("memory_limit", memory_get_usage() + $size[0] * $size[1] * 10); // for huge images
     }
     switch ($size[2]) {
         case 1:
@@ -166,7 +167,7 @@ function thumb($path, $outpath, $reply, $sfw)
     } // if PDF was thumbnailed delete the orig jpeg
     
     if ($memory_limit_increased)
-        ini_restore('memory_limit');
+        ini_restore("memory_limit");
     
     return $outpath;
 }

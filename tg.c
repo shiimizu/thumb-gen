@@ -1,163 +1,147 @@
-#include <gd.h>
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
-#include <math.h>
+#include <sapi/embed/php_embed.h>
+#include <koio.h>
 
-int main(int argc, char* argv[])
+void koio_load_assets(void);
+void koio_unload_assets(void);
+
+char *ltrim(char *);
+char *rtrim(char *);
+char *trim2(char *);
+char *trim(char *);
+char *trim_php_ends(char *);
+
+int main(int argc, char *argv[])
 {
-    FILE *fp, *fpp;
-    gdImagePtr in, out, image_p;
-    int ow, oh, nw, nh, width, height, file_type, jpg_quality;
-    int reply = 1;
-    int sfw = 1;
-
-    const int MAX_W = 250;
-    const int MAX_H = 250;
-    const int MAXR_W = 125;
-    const int MAXR_H = 125;
-
-    /* Help */
-    if (!(argc == 3 || argc == 4 || argc == 5)) {
-        printf("Generate thumbnails from 4chan\n");
-        printf("%s  <input-file>  <output-file>  [reply?1:0]  [sfw-board?1:0]\n", argv[0]);
+    /* declare a file pointer */
+    FILE    *src;
+    char    *buffer;
+    long    numbytes;
+    const char* script = "tg.php";
+     
+    /* open an existing file for reading */
+    koio_load_assets();
+    src = ko_fopen("//tg.php", "r");
+    // src = fopen(script, "r");    
+     
+    /* quit if the file does not exist */
+    if(src == NULL) {
+        fprintf(stderr, "An error occurred trying to open the file: `%s`\n", script);
+        script = NULL;
         return 1;
     }
-
-    /* Reply Check */
-    if (argc > 3) {
-        reply = atoi(argv[3]);
-        if (argc > 4) {
-            sfw = atoi(argv[4]);
+     
+    /* Get the number of bytes */
+    fseek(src, 0L, SEEK_END);
+    numbytes = ftell(src);
+     
+    /* reset the file position indicator to 
+    the beginning of the file */
+    fseek(src, 0L, SEEK_SET);	
+     
+    /* grab sufficient memory for the 
+    buffer to hold the text */
+    buffer = (char*)calloc(numbytes, sizeof(char));	
+     
+    /* memory error */
+    if(buffer == NULL) {
+        fprintf(stderr, "A memory error occurred trying to open the file: `%s`\n", script);
+        fclose(src);
+        koio_unload_assets();
+        src = NULL;
+        script = NULL;
+        return 1;
+    }
+     
+    /* copy all the text into the buffer */
+    fread(buffer, sizeof(char), numbytes, src);
+    buffer[numbytes] = '\0';
+    fclose(src);
+    koio_unload_assets();
+    src = NULL;
+     
+    /* confirm we have read the file by
+    outputing it to the console */
+    PHP_EMBED_START_BLOCK(argc, argv)
+        buffer = trim_php_ends(buffer);
+        zend_eval_string(buffer, NULL, (char *)script TSRMLS_CC);
+        
+        /* free the memory we used for the buffer */
+        if(buffer) {
+            free(buffer);
+            buffer = NULL;
         }
-    }
-    if (reply <= 0) {
-        width = MAX_W; // Max output width
-        height = MAX_H; //Max output height
-        jpg_quality = 50;
-    }
-    else {
-        width = MAXR_W; // Max output width (imgreply)
-        height = MAXR_H; // Max output height (imgreply)
-        jpg_quality = 40;
-    }
-
-    /* Input */
-    fp = fopen(argv[1], "rb");
-    fpp = fopen(argv[1], "rb"); // A clone so fgetc doesn't consume the original
-    if (!fp || !fpp) {
-        fprintf(stderr, "An error occurred trying to open the file %s\n", argv[1]);
-        return 3;
-    }
-
-    int i1 = fgetc(fpp);
-    int i2 = fgetc(fpp);
-    int i3 = fgetc(fpp);
-    int i4 = fgetc(fpp);
-    int i5 = fgetc(fpp);
-    int i6 = fgetc(fpp);
-
-    // https://en.wikipedia.org/wiki/Magic_number_%28programming%29
-    if (i1 == 0x89 && i2 == 0x50) {
-        // PNG: 89 50 4E 47 0D 0A 1A 0A
-        // Starts with 0x89 0x50
-        // printf("PNG\n");
-        in = gdImageCreateFromPng(fp);
-        file_type = 3;
-    }
-    else if (i1 == 0x47 && i2 == 0x49 && i3 == 0x46 && i4 == 0x38 && i5 == 0x39 && i6 == 0x61) {
-        // GIF: 47 49 46 38 39 61
-        // printf("GIF\n");
-        in = gdImageCreateFromGif(fp);
-        file_type = 1;
-    }
-    else if (i1 == 0xFF && i2 == 0xD8) {
-        // JPEG: FF D8
-        // printf("JPG\n");
-        in = gdImageCreateFromJpeg(fp);
-        file_type = 2;
-    }
-    else {
-        fclose(fpp);
-        fclose(fp);
-        fprintf(stderr, "Unsupported file.\n");
-        return 1;
-    }
-
-    if (!in) {
-        fprintf(stderr, "An error occurred trying to access the file %s\n", argv[1]);
-        return 1;
-    }
-
-    ow = gdImageSX(in);
-    oh = gdImageSY(in);
-
-    /* Resize */
-    if (ow > width || oh > height || file_type == 1) {
-        double key_w = (double)width / ow;
-        double key_h = (double)height / oh;
-        double keys;
-        if (key_w < key_h) {
-            keys = key_w;
-        }
-        else {
-            keys = key_h;
-        }
-        nw = floor(ow * keys);
-        nh = floor(oh * keys);
-    }
-    else {
-        nw = ow;
-        nh = nh;
-    }
-
-    image_p = gdImageCreateTrueColor(nw, nh);
-
-    /* Transparency */
-    if (file_type == 3 || file_type == 1) { /* PNG or GIF */
-        if (reply <= 0) {  /* OP */
-            if (sfw >= 1) {
-                gdImageFill(image_p, 0, 0, 0xEEF2FF); // Blue board OP
-            } else {
-                gdImageFill(image_p, 0, 0, 0xFFFFEE); // Orange board OP
-            }
-        } else { /* Reply */
-            if (sfw >= 1) {
-                gdImageFill(image_p, 0, 0, 0xD6DAF0); // Blue board reply
-            } else {
-                gdImageFill(image_p, 0, 0, 0xF0E0D6); // Orange board Reply
-            }
-        }
-    }
-
-    gdImageCopyResampled(image_p, in, 0, 0, 0, 0, nw, nh, ow, oh);
-
-    /* Debug aspect ratio */
-    /*printf("%d x %d\n",ow,oh);
-      printf("%d x %d\n",nw,nh);
-      printf("%d x %d\n",gdImageSX(image_p),gdImageSY(image_p));*/
-
-    fclose(fpp);
-    fclose(fp);
-    if (nw <= 0 || nh <= 0 ) {
-        fprintf(stderr, "Input:\t%d x %d\n",ow,oh);
-        fprintf(stderr, "Output:\t%d x %d\n",nw,nh);
-        fprintf(stderr, "An error has occurred  .\n");
-        return 1;
-    }
-
-
-    /* Output */
-    fp = fopen(argv[2], "wb");
-    if (!fp) {
-        fprintf(stderr, "Error saving image %s\n", argv[2]);
-        return 1;
-    }
-    gdImageJpeg(image_p, fp, jpg_quality);
-    fclose(fp);
-
-    /* Cleanups */
-    gdImageDestroy(in);
-    gdImageDestroy(image_p);
+    PHP_EMBED_END_BLOCK()
 
     return 0;
+
+}
+
+char *trim_php_ends(char *str) {
+    if(!str) return str;
+    str = trim(str);
+    
+    size_t len = strlen(str);
+    if( len >= 5 &&
+        str[0] == '<' &&
+        str[1] == '?' &&
+        str[2] == 'p' &&
+        str[3] == 'h' &&
+        str[4] == 'p') {
+        memmove(str, str + 5, len - 5 + 1);
+        // str += 5; // don't use for dynamic strings
+    }
+    
+    len = strlen(str);
+    char *end = str + len - 1;
+    if(end && len >= 2) {
+        if (end && *end == '>'){ *end = '\0' ; end--; } ;
+        if (end && *end == '?'){ *end = '\0' ; end--; } ;
+    }
+    return str;
+}
+
+char *trim(char *string)
+{
+    if(!string) return string;
+    
+    char *ptr = NULL;
+    
+    // chomp away space at the start
+    while (isspace(*string)) 
+        memmove(string, string + 1, strlen(string));
+        // string++; 
+    
+    // jump to the last char (-1 because '\0')
+    ptr = string + strlen(string) - 1;
+    
+    // overwrite with end of string
+    while (isspace(*ptr)){ *ptr = '\0' ; ptr--; } ;
+    
+    return string;  // return pointer to the modified start 
+}
+
+char *trim2(char *s)
+{
+    if(!s) return s;
+    return rtrim(ltrim(s)); 
+}
+
+char *ltrim(char *s)
+{
+    if(!s) return s;
+    while(isspace(*s)) s++;
+    return s;
+}
+
+char *rtrim(char *s)
+{
+    if(!s) return s;
+    char* back = s + strlen(s);
+    if(!back) return s;
+    while(isspace(*--back));
+    *(back+1) = '\0';
+    return s;
 }
